@@ -35,7 +35,10 @@
             margin-right: auto;    /* Centrering (højre side) */
         }
         /* Mere information om CSS Selectors: https://www.w3schools.com/css/css_selectors.asp */
-
+        
+        #counter {
+        font-size: 32px;  /* Skrift størrelse for tælleren */
+    }
         h1 {
     margin-top: 20px;   /* Lidt afstand fra toppen */
     text-align: center; /* Centrerer teksten */
@@ -75,27 +78,65 @@
     <p id="counter" class="stylish-text">0</p> <!-- Tekstafsnit med id 'counter' --> 
     <!-- Mere information: https://www.w3schools.com/html/html_paragraphs.asp -->
 
-    <script> <!-- Indlejret JavaScript-kode -->
-        <!-- Mere information: https://www.w3schools.com/js/js_intro.asp -->
-        let count = 0;
+    <script>
+        // Initialisering af variable
+        let count = 0.00;
+        let clickValue = 0.10;
+        const boostDuration = 5000; // 5 sekunder
+        const boostMultiplier = 2; 
+        const clickThreshold = 10; 
+        let recentClicks = [];
+        let isBoosted = false; // Tilføjet en ny variabel for at holde styr på, om multiplikatoren er aktiveret
+    
         const clicker = document.getElementById('clicker');
-
+        const counter = document.getElementById('counter');
+        const offset = 100;
+    
         clicker.addEventListener('click', function() {
-            count++; // Øger tælleren ved hvert klik
-            document.getElementById('counter').innerHTML = count; // Opdaterer tællervisningen på websiden
-
-            // Får billedet til at hoppe til en ny position
-            const maxX = window.innerWidth - 250; // 250 er billedets bredde
-            const maxY = window.innerHeight - 250; // 250 er billedets højde
-
-            const randomX = Math.random() * maxX;
-            const randomY = Math.random() * maxY;
-
-            clicker.style.left = randomX + 'px'; // Sætter den tilfældige 'left' position
-            clicker.style.top = randomY + 'px';  // Sætter den tilfældige 'top' position
+            const now = Date.now(); 
+    
+            recentClicks.push(now);
+            while (recentClicks[0] < now - 10000) {
+                recentClicks.shift();
+            }
+    
+            if (!isBoosted && recentClicks.length >= clickThreshold) { // Tjekker, om multiplikatoren ikke allerede er aktiveret
+                activateMultiplier();
+            }
+    
+            count += clickValue;
+            counter.innerHTML = count.toFixed(2) + " BTC";
+    
+            const titleRect = document.querySelector('h1.stylish-text').getBoundingClientRect();
+            const counterRect = counter.getBoundingClientRect();
+    
+            let randomX, randomY;
+    
+            do {
+                randomX = Math.random() * (window.innerWidth - 250);
+                randomY = Math.random() * (window.innerHeight - 250);
+            } while (isOverlapping(randomX, randomY, titleRect) || isOverlapping(randomX, randomY, counterRect));
+    
+            clicker.style.left = randomX + 'px';
+            clicker.style.top = randomY + 'px';
         });
-        /* Mere information om DOM Events: https://www.w3schools.com/js/js_htmldom_events.asp */
+    
+        function activateMultiplier() {
+            clickValue *= boostMultiplier;
+            isBoosted = true; // Markerer, at multiplikatoren er aktiveret
+    
+            // Efter en given periode (boostDuration) nulstilles multiplikatoreffekten
+            setTimeout(() => {
+                clickValue /= boostMultiplier;
+                isBoosted = false; // Markerer, at multiplikatoren ikke længere er aktiveret
+            }, boostDuration);
+        }
+    
+        function isOverlapping(x, y, rect) {
+            return !(x > rect.right || x + 250 < rect.left || y > rect.bottom || y + 250 < rect.top);
+        }
     </script>
+    
 </body>
 
 </html>
